@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Text;
 using HidLibrary;
 
@@ -15,7 +16,7 @@ namespace EldesReader
             _packetLength = device.Capabilities.OutputReportByteLength - 1;
         }
         
-        public string MakeRequest(string command, string? responseText = null)
+        public UsbReader MakeRequest(string command, string? responseText = null)
         {
             var requestData = new byte[_packetLength];
 
@@ -24,7 +25,15 @@ namespace EldesReader
 
             _device.Write(requestData);
 
-            while (true) // TODO: timeout?
+            return this;
+        }
+        
+        // The alarm panel sends packets constantly and we need to find the one which matches our request
+        public string? FindResponse(string responseTextPart, TimeSpan? timeout = null)
+        {
+            var stopwatch = Stopwatch.StartNew();
+
+            while (stopwatch.Elapsed <= (timeout ?? TimeSpan.MaxValue))
             {
                 var responseData = _device.Read();
                 
@@ -37,11 +46,13 @@ namespace EldesReader
                 
                 var response = Encoding.ASCII.GetString(responseData.Data[2..][..responseLength]);
 
-                if (response.Contains(responseText ?? command))
+                if (response.Contains(responseTextPart))
                 {
                     return response;
                 }
             }
+
+            return null;
         }
     }
 }
