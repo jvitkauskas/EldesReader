@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using HidLibrary;
 
 namespace EldesReader
@@ -10,7 +11,7 @@ namespace EldesReader
     {
         private static readonly int UsbVendorId = 0xc201;
         private static readonly int UsbProductId = 0x1318;
-        private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10); // response seems to come in under 20ms
+        private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(1); // response seems to come in under 20ms
 
         static void Main(string[] args)
         {
@@ -22,6 +23,22 @@ namespace EldesReader
             }
 
             var usbReader = new UsbReader(device);
+            
+            var versionResponse = usbReader
+                .MakeRequest("getvertion")
+                .FindResponse(" ", Timeout);
+            
+            Console.WriteLine($"Version response: {versionResponse}");
+            
+            Thread.Sleep(1000);
+            
+            var serviceModeResponse = usbReader
+                .MakeRequest("getservicemodestatus")
+                .FindResponse("servicemode", Timeout);
+            
+            Console.WriteLine($"Service mode response: {serviceModeResponse}");
+            
+            Thread.Sleep(1000);
 
             var clockResponse = usbReader
                 .MakeRequest("clock")
@@ -29,11 +46,15 @@ namespace EldesReader
             
             Console.WriteLine($"Clock response: {clockResponse}");
             
+            Thread.Sleep(1000);
+            
             var uptimeResponse = usbReader
                 .MakeRequest("uptime")
                 .FindResponse("UPT", Timeout);
             
             Console.WriteLine($"Uptime response: {uptimeResponse}");
+            
+            Thread.Sleep(1000);
             
             var zonesResponse = usbReader
                 .MakeRequest("zstatus")
