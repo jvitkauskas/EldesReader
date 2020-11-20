@@ -25,25 +25,25 @@ namespace EldesReader
             
             var versionResponse = usbReader
                 .MakeRequest("getvertion")
-                .FindResponse(" ", Timeout);
+                .FindResponse(" V", Timeout); // eg. ESIM364 V02.16.02
             
             Console.WriteLine($"Version response: {versionResponse}");
             
             var serviceModeResponse = usbReader
                 .MakeRequest("getservicemodestatus")
-                .FindResponse("servicemode", Timeout);
+                .FindResponse("servicemode", Timeout); // eg. servicemode:off
             
             Console.WriteLine($"Service mode response: {serviceModeResponse}");
             
             var clockResponse = usbReader
                 .MakeRequest("clock")
-                .FindResponse("clck", Timeout);
+                .FindResponse("clck", Timeout); // eg. clck 2020-11-21 01:32:33
             
             Console.WriteLine($"Clock response: {clockResponse}");
             
             var uptimeResponse = usbReader
                 .MakeRequest("uptime")
-                .FindResponse("UPT", Timeout);
+                .FindResponse("UPT", Timeout); // eg. UPT 16404
             
             Console.WriteLine($"Uptime response: {uptimeResponse}");
             
