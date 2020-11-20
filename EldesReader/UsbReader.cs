@@ -26,44 +26,49 @@ namespace EldesReader
         // The alarm panel sends packets constantly and we need to find the one which matches our request
         public string? FindResponse(string responseTextPart, TimeSpan? timeout = null)
         {
-            var stopwatch = Stopwatch.StartNew();
-
-            var response = new StringBuilder();
-
-            while (stopwatch.Elapsed <= (timeout ?? TimeSpan.MaxValue))
+            try
             {
-                var responseData = _device.Read();
+                var stopwatch = Stopwatch.StartNew();
 
-                if (responseData.Data.Length < 2)
+                var response = new StringBuilder();
+
+                while (stopwatch.Elapsed <= (timeout ?? TimeSpan.MaxValue))
                 {
-                    continue;
-                }
+                    var responseData = _device.Read();
+
+                    if (responseData.Data.Length < 2)
+                    {
+                        continue;
+                    }
                 
-                var responseLength = responseData.Data[1];
+                    var responseLength = responseData.Data[1];
 
-                if (responseLength == 0)
-                {
-                    continue;
-                }
+                    if (responseLength == 0)
+                    {
+                        continue;
+                    }
                 
-                var chunk = Encoding.ASCII.GetString(responseData.Data[2..][..responseLength]);
+                    var chunk = Encoding.ASCII.GetString(responseData.Data[2..][..responseLength]);
 
-                if (response.Length == 0 && !chunk.Contains(responseTextPart))
-                {
-                    continue;
-                }
+                    if (response.Length == 0 && !chunk.Contains(responseTextPart))
+                    {
+                        continue;
+                    }
                 
-                response.Append(chunk);
+                    response.Append(chunk);
 
-                if (chunk.Contains('\n'))
-                {
-                    _device.CloseDevice();
-                    
-                    return response.ToString();
+                    if (chunk.Contains('\n'))
+                    {
+                        return response.ToString();
+                    }
                 }
+
+                return null;
             }
-
-            return null;
+            finally
+            {
+                _device.CloseDevice();
+            }
         }
     }
 }

@@ -10,7 +10,7 @@ namespace EldesReader
     {
         private static readonly int UsbVendorId = 0xc201;
         private static readonly int UsbProductId = 0x1318;
-        private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(1); // response seems to come in under 20ms
+        private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(1); // full response seems to come in under 50ms
 
         static void Main(string[] args)
         {
@@ -55,14 +55,17 @@ namespace EldesReader
 
             if (zonesResponse != null)
             {
-                var zoneStatusHexStr = zonesResponse[14..16]; // eg. zstatus:0000002E... => 2E
+                var zoneStatusHexStr = zonesResponse[14..16];
                 var zoneStatusInt = int.Parse(zoneStatusHexStr, NumberStyles.HexNumber);
                 var zones = new BitArray(new[] {zoneStatusInt});
-
-                int i = 0;
-                foreach (bool zone in zones)
+                
+                var tamperStatusHexStr = zonesResponse[46..48];
+                var tamperStatusInt = int.Parse(tamperStatusHexStr, NumberStyles.HexNumber);
+                var tampers = new BitArray(new[] {tamperStatusInt});
+                
+                for (int i = 0; i < 32; i++)
                 {
-                    Console.WriteLine($"Zone {++i}: {(zone ? "Open" : "Closed")}");
+                    Console.WriteLine($"Zone {i+1:00}: {(zones[i] ? "Open" : "Closed")}, {(tampers[i] ? "Tamper" : "No tamper")}");
                 }
             }
         }
