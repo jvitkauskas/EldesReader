@@ -37,6 +37,11 @@ namespace EldesReader
             {
                 var responseData = _device.Read();
                 
+                if (responseData.Data.Length < 2)
+                {
+                    continue;
+                }
+                
                 var responseLength = responseData.Data[1];
 
                 if (responseLength == 0)
