@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Globalization;
 using System.Linq;
-using System.Threading;
 using HidLibrary;
 
 namespace EldesReader
@@ -30,23 +29,17 @@ namespace EldesReader
             
             Console.WriteLine($"Version response: {versionResponse}");
             
-            Thread.Sleep(1000);
-            
             var serviceModeResponse = usbReader
                 .MakeRequest("getservicemodestatus")
                 .FindResponse("servicemode", Timeout);
             
             Console.WriteLine($"Service mode response: {serviceModeResponse}");
             
-            Thread.Sleep(1000);
-
             var clockResponse = usbReader
                 .MakeRequest("clock")
                 .FindResponse("clck", Timeout);
             
             Console.WriteLine($"Clock response: {clockResponse}");
-            
-            Thread.Sleep(1000);
             
             var uptimeResponse = usbReader
                 .MakeRequest("uptime")
@@ -54,17 +47,15 @@ namespace EldesReader
             
             Console.WriteLine($"Uptime response: {uptimeResponse}");
             
-            Thread.Sleep(1000);
-            
             var zonesResponse = usbReader
                 .MakeRequest("zstatus")
                 .FindResponse("zstatus", Timeout);
-            
+
             Console.WriteLine($"Zones response: {zonesResponse}");
 
             if (zonesResponse != null)
             {
-                var zoneStatusHexStr = zonesResponse[14..16]; // eg. zstatus:0000002E000000000000000000000000000000 => 2E
+                var zoneStatusHexStr = zonesResponse[14..16]; // eg. zstatus:0000002E... => 2E
                 var zoneStatusInt = int.Parse(zoneStatusHexStr, NumberStyles.HexNumber);
                 var zones = new BitArray(new[] {zoneStatusInt});
 

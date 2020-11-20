@@ -8,22 +8,17 @@ namespace EldesReader
     public class UsbReader
     {
         private readonly HidDevice _device;
-        private readonly int _packetLength;
 
         public UsbReader(HidDevice device)
         {
             _device = device;
-            _packetLength = device.Capabilities.OutputReportByteLength - 1;
         }
         
         public UsbReader MakeRequest(string command, string? responseText = null)
         {
-            var requestData = new byte[_packetLength];
+            var request = Encoding.ASCII.GetBytes($"\0{(char) (command.Length+1)}{command}\r");
 
-            var request = Encoding.ASCII.GetBytes($"{(char) (command.Length+1)}{command}\r");
-            Array.Copy(request, 0, requestData, 1, request.Length);
-
-            _device.Write(requestData);
+            _device.Write(request);
 
             return this;
         }
@@ -33,10 +28,12 @@ namespace EldesReader
         {
             var stopwatch = Stopwatch.StartNew();
 
+            var response = new StringBuilder();
+
             while (stopwatch.Elapsed <= (timeout ?? TimeSpan.MaxValue))
             {
                 var responseData = _device.Read();
-                
+
                 if (responseData.Data.Length < 2)
                 {
                     continue;
@@ -49,11 +46,20 @@ namespace EldesReader
                     continue;
                 }
                 
-                var response = Encoding.ASCII.GetString(responseData.Data[2..][..responseLength]);
+                var chunk = Encoding.ASCII.GetString(responseData.Data[2..][..responseLength]);
 
-                if (response.Contains(responseTextPart))
+                if (response.Length == 0 && !chunk.Contains(responseTextPart))
                 {
-                    return response;
+                    continue;
+                }
+                
+                response.Append(chunk);
+
+                if (chunk.Contains('\n'))
+                {
+                    _device.CloseDevice();
+                    
+                    return response.ToString();
                 }
             }
 
